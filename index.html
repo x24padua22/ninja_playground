@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<script src="/js/jquery.js" type="text/javascript"></script>
+	<script src='http://192.168.1.2:1111/socket.io/socket.io.js'></script>
+	<script type="text/javascript">
+		var current_player = "";
+		
+		$(document).ready(function(){	
+		
+			var socket = io.connect();
+			var player_name = prompt("Enter your name!");
+			var x=0, y=0, src = "";
+			
+			//when someone didn't add their name 
+			if(player_name != "null") {			
+				socket.emit('join_mover', player_name);
+			}
+			else
+				window.location = "/";
+
+			// show other players when someone joined the game
+			socket.on('join_playground', function (playground){
+				//set the current player
+				current_player = playground.current_player;
+				
+				//add all the other players in the playground
+				for(counter in playground.players)
+				{
+					$('#playground').append('<img src="img/down1.png" alt="ninja" id="'+ playground.players[counter] +'" title="'+ playground.players[counter] +'">');
+				}
+			});
+			
+			// add a new player to other clients playground when someone joined
+			socket.on('create_new_mover', function (player_name){
+				$('#playground').append('<img src="img/down1.png" alt="ninja" id="'+ player_name +'" title="'+ player_name +'">');
+			});
+			
+			// to show other clients my position
+			socket.on('player_location', function(position){
+				$('#'+position.player_name).css("left", position.left+"px");
+				$('#'+position.player_name).css("top", position.top+"px");
+				$('#'+position.player_name).attr("src", position.src);
+			});
+			
+			// to make ninja walk
+			document.onkeydown = function(e)
+			{
+				if(e.keyCode == 37)
+				{
+					if(x != 0)
+						x = x-10;
+
+					if(src == "img/left1.png")
+						src = "img/left2.png"
+					else
+						src = "img/left1.png"
+				}
+				else if(e.keyCode == 39)
+				{
+					if(x != 490) 
+						x = x+10;
+
+					if(src == "img/right1.png")
+						src = "img/right2.png"
+					else
+						src = "img/right1.png"
+				}
+				else if(e.keyCode == 38)
+				{
+					if(y != 0)
+						y= y-10;
+
+					if(src == "img/top1.png")
+						src = "img/top2.png"
+					else
+						src = "img/top1.png"
+				}
+				else if(e.keyCode == 40)
+				{
+					if(y != 490) 
+						y = y+10;
+
+					if(src == "img/down1.png")
+						src = "img/down2.png"
+					else
+						src = "img/down1.png"
+				}
+				
+				$('#'+current_player).css("left", x+"px");
+				$('#'+current_player).css("top", y+"px");
+				$('#'+current_player).attr("src", src);
+				
+				position = {player_name: current_player, left: x, top: y, src: src}
+				
+				// emit the position of the current player to other players
+				socket.emit('my_position', position);
+			}
+
+		});
+	</script>
+	<style type="text/css">
+		*{
+			margin:0;
+			padding:0;
+		}
+		#playground{
+			height:500px;
+			position:absolute;
+			width:500px;
+		}
+		#playground img{
+			position:absolute;
+			top:0px; 
+			left:0px;
+		}
+	</style>
+</head>
+<body>
+	<div id="playground"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
