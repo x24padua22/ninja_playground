@@ -39,6 +39,7 @@ io.sockets.on('connection', function (socket){
 	
 	// to broadcast the position of the moving player
 	socket.on('my_position', function(position){
+		console.log(position);
 		socket.broadcast.emit('player_location', position);
 	});
 	
